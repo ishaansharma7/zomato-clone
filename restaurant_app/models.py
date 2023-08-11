@@ -1,6 +1,8 @@
 from django.db import models
 from django.core.validators import MinLengthValidator, MinValueValidator, MaxValueValidator
 from accounts.models import CustomUser
+from django.dispatch import receiver
+from django.db.models.signals import post_save
 
 
 class RestaurantDetail(models.Model):
@@ -16,7 +18,7 @@ class RestaurantDetail(models.Model):
 
 class Dish(models.Model):
     name = models.CharField(max_length=50)
-    price = models.DecimalField(validators=[MinValueValidator(limit_value=20), MaxValueValidator(limit_value=3000)])
+    price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(limit_value=20), MaxValueValidator(limit_value=3000)])
     description = models.TextField(blank=True, null=True)
     restaurant = models.ForeignKey(RestaurantDetail, on_delete=models.CASCADE)
 
@@ -34,11 +36,23 @@ class Cart(models.Model):
 
 
 class OrderDetail(models.Model):
-    placed_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, default=None)
-    dish = models.ForeignKey(Dish, on_delete=models.SET_NULL, default=None)
+    placed_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True)
+    dish = models.ForeignKey(Dish, on_delete=models.SET_NULL, null=True)
     quantity = models.IntegerField(validators=[MinValueValidator(limit_value=0), MaxValueValidator(5)])
-    total_price = models.DecimalField()
+    total_price = models.DecimalField(max_digits=10, decimal_places=2)
 
 
     def __str__(self):
         return self.placed_by
+    
+
+
+############### Signal #################
+
+@receiver(post_save, sender=RestaurantDetail)
+def restau_creation(sender, instance, created, **kwargs):
+    if created:
+        manager_obj = instance.manager
+        manager_obj.user_type = 'restaurant_manager'
+        manager_obj.save()
+        print('user converted to manager')

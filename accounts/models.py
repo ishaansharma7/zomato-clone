@@ -53,7 +53,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     address = models.TextField(validators=[MinLengthValidator(limit_value=3, message='Address should be atleast 5 characters')])
     TYPE_CHOICES = (
         ('customer', 'Customer'),
-        ('restaurant', 'Restaurant')
+        ('restaurant_manager', 'Restaurant Manager')
     )
     user_type = models.CharField(choices=TYPE_CHOICES, default='customer', max_length=20)
     is_active = models.BooleanField(default=True)
