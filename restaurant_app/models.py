@@ -21,7 +21,10 @@ class Dish(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(limit_value=20), MaxValueValidator(limit_value=3000)])
     description = models.TextField(blank=True, null=True)
     restaurant = models.ForeignKey(RestaurantDetail, on_delete=models.CASCADE)
-
+    img_link = models.URLField(null=True, blank=True)
+    
+    class Meta:
+        verbose_name_plural = 'Dishes'
 
     def __str__(self):
         return self.name
@@ -38,12 +41,14 @@ class Cart(models.Model):
 class OrderDetail(models.Model):
     placed_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True)
     dish = models.ForeignKey(Dish, on_delete=models.SET_NULL, null=True)
-    quantity = models.IntegerField(validators=[MinValueValidator(limit_value=0), MaxValueValidator(5)])
-    total_price = models.DecimalField(max_digits=10, decimal_places=2)
+    quantity = models.IntegerField(validators=[MinValueValidator(limit_value=0), MaxValueValidator(5)], default=1)
+    total_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    order_placed = models.BooleanField(default=False)
+    order_time = models.DateTimeField(auto_now_add=True)
 
 
     def __str__(self):
-        return self.placed_by
+        return self.placed_by.username
     
 
 

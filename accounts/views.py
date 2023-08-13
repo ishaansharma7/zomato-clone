@@ -11,7 +11,7 @@ class RegisterView(FormView):
     template_name = 'accounts/register.html'
     form_class = SignUpForm
     redirect_authenticated_user = True      # didin't work
-    success_url = reverse_lazy('accounts_app:test_restricted_view')
+    success_url = reverse_lazy('restaurant_app:dish_listing')
     def form_valid(self, form):
         user = form.save()
         if user is not None:
@@ -21,7 +21,7 @@ class RegisterView(FormView):
     
     def get(self, *args, **kwargs):     # an already logged in user will be redirected
         if self.request.user.is_authenticated:
-            return redirect('accounts_app:test_restricted_view')
+            return redirect('restaurant_app:dish_listing')
         return super(RegisterView, self).get(*args, **kwargs)
     
 
@@ -34,7 +34,7 @@ class CustomLoginView(LoginView):
         next_url = self.request.GET.get('next')
         if next_url:
             return next_url
-        return reverse_lazy('accounts_app:test_restricted_view')
+        return reverse_lazy('restaurant_app:dish_listing')
 
 
 def index(request):

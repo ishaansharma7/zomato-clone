@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block title %}Dishes{% endblock %}
+
+{% block body_block %}
+
+
+<div class="row justify-content-center mt-4">
+    <div class="col-auto">
+        <form class="form-inline" method="GET" action="{% url 'restaurant_app:dish_listing' %}">
+            <div class="input-group">
+                <input type="text" class="form-control" placeholder="dish / restaurant" aria-label="Search" name="search_term">
+                <div class="input-group-append">
+                    <button class="btn btn-primary" type="submit">Search</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<div class="row mx-2">
+
+    <div class="col-md-2 my-2"></div>
+
+    <div class="col-md-8 my-2">
+        <div class="container mt-4">
+            <h1>Dishes Available</h1>
+            <ul class="list-group mt-4">
+                {% for dish in page_obj %}
+                <li class="list-group-item">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <!-- Column 1: Image of the book -->
+                            <img src="{{dish.img_link}}" alt="Dish Image" class="img-fluid" style="height: auto; width: 200px;">
+                        </div>
+                        <div class="col-md-6">
+                                    <h5><strong>{{ dish.name }}</strong></h5>
+                                    Price: ₹{{ dish.price }}<br>
+                                    <strong>{{ dish.restaurant.name }}</strong><br>
+                                    Desc: {{ dish.description }}
+                        </div>
+                        <div class="col-md-3">
+                            <!-- Column 3: Edit button -->
+                            <a href="{% url 'restaurant_app:add_item' page=page_obj.number dish_id=dish.id dish_name=dish.name %}" class="btn btn-warning my-3">Add</a>
+                        </div>
+                    </div>
+                </li>
+                
+                {% endfor %}
+            </ul>
+        </div>
+
+
+    </div>
+
+    <div class="col-md-2 my-2">
+        <ul>
+            <li>Click on Kitāb for homepage</li>
+            <li>Login to register/edit books</li>
+            <li>After login, click on "Create" on the navbar to register a book</li>
+            <li>Click on "Edit" to update a book</li>
+            <li>Click on your name to view books registered by you</li>
+          </ul>
+    </div>
+</div>
+
+<nav aria-label="Page navigation" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item"><a class="page-link" href="?page=1">&laquo; First</a></li>
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+        </li>
+        {% endif %}
+
+        <li class="page-item active"><a class="page-link" href="#">{{ page_obj.number }}</a></li>
+
+        {% if page_obj.has_next %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last &raquo;</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+
+
+{% endblock %}
