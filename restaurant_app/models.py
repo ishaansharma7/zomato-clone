@@ -4,6 +4,7 @@ from accounts.models import CustomUser
 from django.dispatch import receiver
 from django.db.models.signals import post_save
 import uuid
+from django.utils import timezone
 
 
 class RestaurantDetail(models.Model):
@@ -25,6 +26,7 @@ class Dish(models.Model):
     restaurant = models.ForeignKey(RestaurantDetail, on_delete=models.CASCADE)
     img_link = models.URLField(null=True, blank=True)
     updation_date = models.DateTimeField(auto_now_add=True)
+    available = models.BooleanField(default=True)
     
     class Meta:
         verbose_name_plural = 'Dishes'
@@ -48,11 +50,11 @@ class OrderDetail(models.Model):
     quantity = models.IntegerField(validators=[MinValueValidator(limit_value=0), MaxValueValidator(5)], default=1)
     total_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     order_placed = models.BooleanField(default=False)
-    order_time = models.DateTimeField(auto_now=True)
+    order_time = models.DateTimeField(default=timezone.now)
 
 
     def __str__(self):
-        return self.placed_by.username
+        return self.placed_by.username + ' | ' + self.dish.name + ' | ' + str(self.order_time)
     
 
 

@@ -1,5 +1,6 @@
 from django.urls import path
-from .views import DishListing, add_item, remove_item, cart_listing, add_item_cart, remove_item_cart
+from .views import (DishListing, add_item, remove_item, cart_listing,
+                    add_item_cart, remove_item_cart, place_order)
 
 app_name = 'restaurant_app'
 
@@ -9,5 +10,6 @@ urlpatterns = [
     path('remove-item/<int:page>/<str:dish_id>/<str:dish_name>', remove_item, name='remove_item'),
     path('add-item-cart/<str:dish_id>/<str:dish_name>', add_item_cart, name='add_item_cart'),
     path('remove-item-cart/<str:dish_id>/<str:dish_name>', remove_item_cart, name='remove_item_cart'),
-    path('cart/', cart_listing, name='cart_listing')
+    path('cart/', cart_listing, name='cart_listing'),
+    path('place-order/', place_order, name='place_order')
 ]

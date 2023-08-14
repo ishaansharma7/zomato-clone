@@ -12,6 +12,7 @@
     <div class="col-md-8 my-2">
         <div class="container mt-4">
             <h1>Cart Items</h1>
+            {% if cart_dishes %}
             <ul class="list-group mt-4">
                 {% for dish in cart_dishes %}
                 <li class="list-group-item">
@@ -43,15 +44,18 @@
                 
                 {% endfor %}
             </ul>
+            {% else %}
+            <h3 class="text-center">Your cart is empty. Click <a href="{% url 'restaurant_app:dish_listing' %}">here</a> to see available items.</h3>
+            {% endif %}
         </div>
 
 
     </div>
 
     <div class="col-md-2 my-2">
-        <p>Grand Total: ₹<span id="total-value"></span></p>
         {% if cart_dishes %}
-        <button class="btn btn-success">Place Order</button>
+        <p>Grand Total: ₹<span id="total-value"></span></p>
+        <a href="{% url 'restaurant_app:place_order' %}"><button class="btn btn-success">Place Order</button></a>
         {% endif %}
     </div>
 </div>

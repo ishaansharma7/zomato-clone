@@ -9,7 +9,7 @@ from django.urls import reverse
 from pprint import pprint
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
-from restaurant_app.utils import add_item_operation, remove_item_operation
+from restaurant_app.utils import add_item_operation, remove_item_operation, create_order_from_session
 
 
 class DishListing(LoginRequiredMixin, ListView):
@@ -19,7 +19,7 @@ class DishListing(LoginRequiredMixin, ListView):
     paginate_by = 5
     
     def get_queryset(self):
-        return super().get_queryset().order_by('-id')
+        return super().get_queryset().order_by('-updation_date')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -39,11 +39,13 @@ class DishListing(LoginRequiredMixin, ListView):
         if self.request.session.get('dish_operation'):
             messages.success(self.request, self.request.session.get('dish_operation'))
             self.request.session.pop('dish_operation')
+            self.request.session.save()
 
         # item logic
         user_email = self.request.user.email
         if 'cart_session' in self.request.session and user_email in self.request.session['cart_session']:
             context['quantity'] = dict(self.request.session['cart_session'][user_email])
+            pprint(context['quantity'], indent=2)
         return context
 
 
@@ -81,15 +83,40 @@ def remove_item_cart(request, dish_id, dish_name):
 
 @login_required(login_url='accounts_app:login')
 def cart_listing(request):
-    cart_session = request.session.get('cart_session')
-    user_email = request.user.email
     session_dishes_dict = {}
+    user_email = request.user.email
+    cart_session = request.session.get('cart_session')
     if cart_session and user_email in cart_session:
         session_dishes_dict = cart_session[user_email]
     
     matching_dishes = Dish.objects.filter(id__in=session_dishes_dict.keys())
     context = {'cart_dishes': matching_dishes}
+
     if 'cart_session' in request.session and user_email in request.session['cart_session']:
         context['quantity'] = dict(request.session['cart_session'][user_email])
-    return render(request, 'restaurant_app/cart_listing.html', context)
     
+    # message logic
+    if request.session.get('dish_operation'):
+        messages.success(request, request.session.get('dish_operation'))
+        request.session.pop('dish_operation')
+    
+    return render(request, 'restaurant_app/cart_listing.html', context)
+
+
+@login_required(login_url='accounts_app:login')
+def place_order(request):
+    session_dishes_dict = {}
+    user_email = request.user.email
+    cart_session = request.session.get('cart_session')
+    if cart_session and user_email in cart_session:
+        session_dishes_dict = cart_session[user_email]
+    else:
+        print('cart_session or email not available')
+        return redirect('restaurant_app:sih_listing')
+    
+    matching_dishes = Dish.objects.filter(id__in=session_dishes_dict.keys())
+    create_order_from_session(matching_dishes, session_dishes_dict, request.user)
+    request.session['cart_session'].pop(user_email)
+    request.session.save()
+    return render(request, 'restaurant_app/order_confirmed.html')
+        
