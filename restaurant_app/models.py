@@ -48,7 +48,7 @@ class OrderDetail(models.Model):
     quantity = models.IntegerField(validators=[MinValueValidator(limit_value=0), MaxValueValidator(5)], default=1)
     total_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     order_placed = models.BooleanField(default=False)
-    order_time = models.DateTimeField(auto_now_add=True)
+    order_time = models.DateTimeField(auto_now=True)
 
 
     def __str__(self):

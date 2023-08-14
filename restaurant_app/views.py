@@ -9,6 +9,7 @@ from django.urls import reverse
 from pprint import pprint
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
+from restaurant_app.utils import add_item_operation, remove_item_operation
 
 
 class DishListing(LoginRequiredMixin, ListView):
@@ -48,27 +49,7 @@ class DishListing(LoginRequiredMixin, ListView):
 
 @login_required(login_url='accounts_app:login')
 def add_item(request, page, dish_id, dish_name):
-    user_email = request.user.email
-    # dish_id = int(dish_id)
-    if 'cart_session' not in request.session:
-        request.session['cart_session'] = {}
-    if user_email not in request.session['cart_session']:
-        request.session['cart_session'][user_email] = {}
-        request.session['cart_session'][user_email][dish_id] = 1
-        print('r1')
-    else:
-        if dish_id in request.session['cart_session'][user_email]:
-            if request.session['cart_session'][user_email][dish_id] == 5:
-                request.session['dish_operation'] = 'Limit exceeded!'
-                print('r2')
-            else:
-                request.session['cart_session'][user_email][dish_id] += 1
-                request.session['dish_operation'] = dish_name + ' added to cart!'
-                print('r3')
-        else:
-            request.session['cart_session'][user_email][dish_id] = 1
-            request.session['dish_operation'] = dish_name + ' added to cart!'
-            print('r4')
+    add_item_operation(request, dish_id, dish_name)
     # pprint(dict(request.session), indent=2)
     url = reverse('restaurant_app:dish_listing') + f'?page={page}'
     return redirect(url)
@@ -76,23 +57,25 @@ def add_item(request, page, dish_id, dish_name):
 
 @login_required(login_url='accounts_app:login')
 def remove_item(request, page, dish_id, dish_name):
-    user_email = request.user.email
-    if 'cart_session' not in request.session:
-        request.session['cart_session'] = {}
-    if user_email not in request.session['cart_session']:
-        print('never added any item')
-    else:
-        if dish_id in request.session['cart_session'][user_email]:
-            if request.session['cart_session'][user_email][dish_id] == 1:
-                request.session['cart_session'][user_email].pop(dish_id)
-                request.session['dish_operation'] = dish_name +' removed from cart'
-            else:
-                request.session['cart_session'][user_email][dish_id] -= 1
-                request.session['dish_operation'] = dish_name +' removed from cart'
-        else:
-            print('this item was not added before')
+    remove_item_operation(request, dish_id, dish_name)
     # pprint(dict(request.session), indent=2)
     url = reverse('restaurant_app:dish_listing') + f'?page={page}'
+    return redirect(url)
+
+
+@login_required(login_url='accounts_app:login')
+def add_item_cart(request, dish_id, dish_name):
+    add_item_operation(request, dish_id, dish_name)
+    # pprint(dict(request.session), indent=2)
+    url = reverse('restaurant_app:cart_listing')
+    return redirect(url)
+
+
+@login_required(login_url='accounts_app:login')
+def remove_item_cart(request, dish_id, dish_name):
+    remove_item_operation(request, dish_id, dish_name)
+    # pprint(dict(request.session), indent=2)
+    url = reverse('restaurant_app:cart_listing')
     return redirect(url)
 
 
@@ -106,5 +89,7 @@ def cart_listing(request):
     
     matching_dishes = Dish.objects.filter(id__in=session_dishes_dict.keys())
     context = {'cart_dishes': matching_dishes}
+    if 'cart_session' in request.session and user_email in request.session['cart_session']:
+        context['quantity'] = dict(request.session['cart_session'][user_email])
     return render(request, 'restaurant_app/cart_listing.html', context)
     
