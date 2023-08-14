@@ -1,4 +1,6 @@
 {% load static %}
+{% load custom_filters %}
+{% load d2 %}
 <!doctype html>
 <html lang="en">
 
@@ -29,6 +31,10 @@
           {% if user.is_authenticated %}
           <li class="nav-item active">
             <a class="nav-link text-dark" href="#">{{ request.user.full_name }} <span
+                class="sr-only">(current)</span></a>
+          </li>
+          <li class="nav-item active">
+            <a class="nav-link text-dark" href="{% url 'restaurant_app:cart_listing' %}"> Cart <span
                 class="sr-only">(current)</span></a>
           </li>
           <li class="nav-item active">

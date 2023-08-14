@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load custom_filters %}
 {% block title %}Dishes{% endblock %}
 
 {% block body_block %}
@@ -39,9 +40,20 @@
                                     <strong>{{ dish.restaurant.name }}</strong><br>
                                     Desc: {{ dish.description }}
                         </div>
-                        <div class="col-md-3">
-                            <!-- Column 3: Edit button -->
+                        <!-- <div class="col-md-3">
                             <a href="{% url 'restaurant_app:add_item' page=page_obj.number dish_id=dish.id dish_name=dish.name %}" class="btn btn-warning my-3">Add</a>
+                        </div> -->
+                        <div class="col-md-3">
+                                <div class="row my-4 mx-auto">
+                                    <a href="{% url 'restaurant_app:remove_item' page=page_obj.number dish_id=dish.id dish_name=dish.name %}"><button class="btn btn-secondary col" id="decrement">-</button></a>
+                                {% if dish.id|stringformat:"s" in quantity %}
+                                <input type="number" id="quantity" class="form-control text-center col" value="{{ dish.id|get_dict_value:quantity }}" readonly>
+                                {{ quantity.dish.id|stringformat:'s' }}
+                                {% else %}
+                                <input type="number" id="quantity" class="form-control text-center col" value="0" readonly>
+                                {% endif %}
+                                <a href="{% url 'restaurant_app:add_item' page=page_obj.number dish_id=dish.id dish_name=dish.name %}"><button class="btn btn-secondary col" id="increment">+</button></a>
+                                </div>
                         </div>
                     </div>
                 </li>

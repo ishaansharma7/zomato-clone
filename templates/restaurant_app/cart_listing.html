@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% block title %}Dishes{% endblock %}
+
+{% block body_block %}
+
+
+<div class="row mx-2">
+
+    <div class="col-md-2 my-2"></div>
+
+    <div class="col-md-8 my-2">
+        <div class="container mt-4">
+            <h1>Dishes Available</h1>
+            <ul class="list-group mt-4">
+                {% for dish in cart_dishes %}
+                <li class="list-group-item">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <!-- Column 1: Image of the book -->
+                            <img src="{{dish.img_link}}" alt="Dish Image" class="img-fluid" style="height: auto; width: 200px;">
+                        </div>
+                        <div class="col-md-6">
+                                    <h5><strong>{{ dish.name }}</strong></h5>
+                                    Price: ₹{{ dish.price }}<br>
+                                    <strong>{{ dish.restaurant.name }}</strong><br>
+                                    Desc: {{ dish.description }}
+                        </div>
+
+                    </div>
+                </li>
+                
+                {% endfor %}
+            </ul>
+        </div>
+
+
+    </div>
+
+    <div class="col-md-2 my-2">
+        <ul>
+            <li>Click on Kitāb for homepage</li>
+            <li>Login to register/edit books</li>
+            <li>After login, click on "Create" on the navbar to register a book</li>
+            <li>Click on "Edit" to update a book</li>
+            <li>Click on your name to view books registered by you</li>
+          </ul>
+    </div>
+</div>
+
+
+
+{% endblock %}

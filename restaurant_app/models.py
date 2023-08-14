@@ -3,6 +3,7 @@ from django.core.validators import MinLengthValidator, MinValueValidator, MaxVal
 from accounts.models import CustomUser
 from django.dispatch import receiver
 from django.db.models.signals import post_save
+import uuid
 
 
 class RestaurantDetail(models.Model):
@@ -17,17 +18,20 @@ class RestaurantDetail(models.Model):
 
 
 class Dish(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4(), editable=False)
     name = models.CharField(max_length=50)
     price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(limit_value=20), MaxValueValidator(limit_value=3000)])
     description = models.TextField(blank=True, null=True)
     restaurant = models.ForeignKey(RestaurantDetail, on_delete=models.CASCADE)
     img_link = models.URLField(null=True, blank=True)
+    updation_date = models.DateTimeField(auto_now_add=True)
     
     class Meta:
         verbose_name_plural = 'Dishes'
 
     def __str__(self):
-        return self.name
+        return self.name + ' | ' + self.restaurant.name
+    
 
 
 class Cart(models.Model):
