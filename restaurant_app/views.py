@@ -1,10 +1,9 @@
-from typing import Any, Dict
-from django.db.models.query import QuerySet
-from django.views.generic import ListView, FormView
+from django.views.generic import ListView
+import json
 from django.shortcuts import render
 from .models import Dish, OrderDetail
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, Sum
 from django.contrib import messages
 from django.shortcuts import redirect
 from django.urls import reverse
@@ -140,7 +139,7 @@ class OrderHistory(LoginRequiredMixin, ListView, ):
     def get_queryset(self):
         return super().get_queryset().order_by('-order_time')
     
-    def get_context_data(self, **kwargs: Any):
+    def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
         if self.request.method == 'POST':
@@ -176,3 +175,30 @@ def order_history(request):
     context['page_obj'] = page_obj
 
     return render(request, 'restaurant_app/order_history.html', context)
+
+
+@login_required(login_url='accounts_app:login')
+def analytics(request):
+    # orders = OrderDetail.objects.filter(order_placed=True)
+    orders = OrderDetail.objects.values('dish').annotate(total_quantity=Sum('quantity'))
+    item_list = []
+    for order in orders:
+        dish = Dish.objects.get(id=str(order['dish']))
+        local = {
+            "name": dish.name + ' | ' + dish.restaurant.name,
+            "quantity": order['total_quantity']
+        }
+        item_list.append(local)
+    context = {'items': json.dumps(item_list)}
+    total_sales = OrderDetail.objects.aggregate(total_amount=Sum('quantity'))
+    restaurants_list = []
+    restaurants = OrderDetail.objects.values('dish__restaurant__name').annotate(total_quantity=Sum('quantity'))
+    for restau in restaurants:
+        local = {
+            'name': restau['dish__restaurant__name'],
+            'percentage': restau['total_quantity']/total_sales['total_amount']
+        }
+        restaurants_list.append(local)
+    context['categories'] = json.dumps(restaurants_list)
+
+    return render(request, 'restaurant_app/analytics.html', context)
