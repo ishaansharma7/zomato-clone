@@ -12,7 +12,7 @@
 
     <div class="col-md-8 my-2">
         <div class="container mt-4">
-            <h1>Past Orders: <span id="count">0</span> item(s)</h1>
+            <h1>Past Orders</h1>
             <ul class="list-group mt-4">
                 {% for dish in page_obj %}
                 <li class="list-group-item" id="dish">
@@ -46,6 +46,7 @@
             <div class="form-group">
                 <label for="exampleFormControlSelect1">Filter on date</label>
                 <select class="form-control" id="exampleFormControlSelect1" name="duration">
+                    <option value="All orders" >All orders</option>
                     <option value="Past 1 day" {% if selected_duration == 'Past 1 day' %}selected{% endif %}>Past 1 day</option>
                     <option value="Past 3 days" {% if selected_duration == 'Past 3 days' %}selected{% endif %}>Past 3 days</option>
                     <option value="Past week" {% if selected_duration == 'Past week' %}selected{% endif %}>Past week</option>
@@ -61,16 +62,16 @@
 <nav aria-label="Page navigation" class="mt-4">
     <ul class="pagination justify-content-center">
         {% if page_obj.has_previous %}
-        <li class="page-item"><a class="page-link" href="?page=1">&laquo; First</a></li>
-        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+        <li class="page-item"><a class="page-link" href="?page=1{% if selected_duration %}&duration={{ selected_duration }}{% endif %}">&laquo; First</a></li>
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if selected_duration %}&duration={{ selected_duration }}{% endif %}">Previous</a>
         </li>
         {% endif %}
 
         <li class="page-item active"><a class="page-link" href="#">{{ page_obj.number }}</a></li>
 
         {% if page_obj.has_next %}
-        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
-        <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last &raquo;</a>
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if selected_duration %}&duration={{ selected_duration }}{% endif %}">Next</a></li>
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if selected_duration %}&duration={{ selected_duration }}{% endif %}">Last &raquo;</a>
         </li>
         {% endif %}
     </ul>

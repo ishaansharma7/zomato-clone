@@ -27,6 +27,7 @@ class DishListing(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         search_term = self.request.GET.get('search_term')
         if search_term is not None:
+            context['search_term'] = search_term
             queryset = self.get_queryset().filter(Q(name__icontains=search_term) | Q(restaurant__name__icontains=search_term))
         else:
             queryset = self.get_queryset()
@@ -154,7 +155,7 @@ def order_history(request):
     user = request.user
     paginate_by = 5
     context = {}
-    if request.GET.get('duration'):
+    if request.GET.get('duration') and request.GET['duration'] != 'All orders':
         duration = request.GET.get('duration')
         context['selected_duration'] = duration
         range1, range2 = get_date_range(duration)

@@ -30,10 +30,6 @@
         <ul class="navbar-nav mr-auto">
           {% if user.is_authenticated %}
           <li class="nav-item active">
-            <a class="nav-link text-dark" href="#">{{ request.user.full_name }} <span
-                class="sr-only">(current)</span></a>
-          </li>
-          <li class="nav-item active">
             <a class="nav-link text-dark" href="{% url 'restaurant_app:cart_listing' %}"> Cart <span
                 class="sr-only">(current)</span></a>
           </li>
@@ -46,7 +42,7 @@
                 class="sr-only">(current)</span></a>
           </li>
           <li class="nav-item active">
-            <a class="nav-link text-dark" href="{% url 'admin:index' %}">Admin Panel <span
+            <a class="nav-link text-dark" href="{% url 'admin:index' %}" target="_blank">Admin Panel <span
                 class="sr-only">(current)</span></a>
           </li>
           {% else %}
@@ -56,6 +52,11 @@
           </li>
           {% endif %}
         </ul>
+        {% if user.is_authenticated %}
+        <span class="navbar-text text-dark">
+          Hi {{ request.user.full_name }}
+        </span>
+        {% endif %}
       </div>
     </nav>
 
