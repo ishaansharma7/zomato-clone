@@ -26,7 +26,8 @@ class DishListing(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         search_term = self.request.GET.get('search_term')
-        if search_term is not None:
+        if search_term is not None and search_term not in ['', 'none']:
+            print('rann----')
             context['search_term'] = search_term
             queryset = self.get_queryset().filter(Q(name__icontains=search_term) | Q(restaurant__name__icontains=search_term))
         else:
@@ -53,18 +54,24 @@ class DishListing(LoginRequiredMixin, ListView):
 
 
 @login_required(login_url='accounts_app:login')
-def add_item(request, page, dish_id, dish_name):
+def add_item(request, page, dish_id, dish_name, search_term='none'):
     add_item_operation(request, dish_id, dish_name)
     # pprint(dict(request.session), indent=2)
-    url = reverse('restaurant_app:dish_listing') + f'?page={page}'
+    if search_term != 'none':
+        url = reverse('restaurant_app:dish_listing') + f'?page={page}&search_term={search_term}'
+    else:
+        url = reverse('restaurant_app:dish_listing') + f'?page={page}'
     return redirect(url)
 
 
 @login_required(login_url='accounts_app:login')
-def remove_item(request, page, dish_id, dish_name):
+def remove_item(request, page, dish_id, dish_name, search_term='none'):
     remove_item_operation(request, dish_id, dish_name)
     # pprint(dict(request.session), indent=2)
-    url = reverse('restaurant_app:dish_listing') + f'?page={page}'
+    if search_term != 'none':
+        url = reverse('restaurant_app:dish_listing') + f'?page={page}&search_term={search_term}'
+    else:
+        url = reverse('restaurant_app:dish_listing') + f'?page={page}'
     return redirect(url)
 
 
