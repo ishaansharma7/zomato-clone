@@ -1,6 +1,8 @@
-from django.views.generic import ListView
+from typing import Any, Dict
+from django.db.models.query import QuerySet
+from django.views.generic import ListView, FormView
 from django.shortcuts import render
-from .models import Dish
+from .models import Dish, OrderDetail
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.contrib import messages
@@ -9,7 +11,7 @@ from django.urls import reverse
 from pprint import pprint
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
-from restaurant_app.utils import add_item_operation, remove_item_operation, create_order_from_session
+from restaurant_app.utils import add_item_operation, remove_item_operation, create_order_from_session, get_date_range
 
 
 class DishListing(LoginRequiredMixin, ListView):
@@ -120,3 +122,49 @@ def place_order(request):
     request.session.save()
     return render(request, 'restaurant_app/order_confirmed.html')
         
+
+class OrderHistory(LoginRequiredMixin, ListView, ):
+    model = OrderDetail
+    template_name = 'restaurant_app/order_history.html'
+    context_object_name = 'ordered_dishes'
+    paginate_by = 5
+
+    def get_queryset(self):
+        return super().get_queryset().order_by('-order_time')
+    
+    def get_context_data(self, **kwargs: Any):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        if self.request.method == 'POST':
+            print('R1')
+            queryset = self.get_queryset().filter(placed_by=user, order_placed=True)
+        else:
+            queryset = self.get_queryset().filter(placed_by=user, order_placed=True)
+        paginator = Paginator(queryset, self.paginate_by)
+        page_number = self.request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        context['page_obj'] = page_obj
+
+
+        return context
+
+
+@login_required(login_url='accounts_app:login')
+def order_history(request):
+    user = request.user
+    paginate_by = 5
+    context = {}
+    if request.GET.get('duration'):
+        duration = request.GET.get('duration')
+        context['selected_duration'] = duration
+        range1, range2 = get_date_range(duration)
+        # print(range1, range2)
+        queryset = OrderDetail.objects.filter(placed_by=user, order_placed=True, order_time__range=(range2, range1)).order_by('-order_time')
+    else:
+        queryset = OrderDetail.objects.filter(placed_by=user, order_placed=True).order_by('-order_time')
+    paginator = Paginator(queryset, paginate_by)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    context['page_obj'] = page_obj
+
+    return render(request, 'restaurant_app/order_history.html', context)
