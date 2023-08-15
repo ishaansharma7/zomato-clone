@@ -1,6 +1,8 @@
 from .models import OrderDetail
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date, time
 import pytz
+from dateutil.parser import parse
+
 
 def add_item_operation(request, dish_id, dish_name):
     user_email = request.user.email
@@ -84,3 +86,9 @@ def get_date_range(duration):
         before = before.replace(hour=0, minute=0, second=0, microsecond=0)
         return current, before
     return None, None
+
+def get_date_obj(req_date):
+    time_object = time()
+    ist_timezone = pytz.timezone('UTC')
+    datetime_object = datetime.combine(req_date, time_object)
+    return datetime_object.astimezone(ist_timezone)

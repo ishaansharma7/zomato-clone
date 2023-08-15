@@ -20,5 +20,5 @@ urlpatterns = [
     path('place-order/', place_order, name='place_order'),
 
     path('past-orders/', order_history, name='past_orders'),
-    path('analytics', analytics, name='analytics')
+    path('analytics/', analytics, name='analytics'),
 ]

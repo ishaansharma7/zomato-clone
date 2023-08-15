@@ -3,17 +3,41 @@
 {% block title %}Analytics{% endblock %}
 
 {% block body_block %}
-<div class="text-center mt-3">
-    <h2>Dish Sales</h2>
+
+<div class="row justify-content-center mt-4">
+    <div class="col-6">
+        <form method="get" action="{% url 'restaurant_app:analytics' %}">
+            {% csrf_token %}
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    {{ form.date1.label_tag }}
+                    {{ form.date1 }}
+                </div>
+                <div class="form-group col-md-6">
+                    {{ form.date2.label_tag }}
+                    {{ form.date2 }}
+                </div>
+            </div>
+            <div class="input-group-append">
+                <button class="btn btn-primary" type="submit">Apply</button>
+            </div>
+        </form>
+    </div>
 </div>
-<div style="width: 80%; margin: auto;">
-    <canvas id="myChart"></canvas>
-</div>
+
+
 <div class="text-center mt-3">
     <h2>Restaurant Sales %</h2>
 </div>
 <div style="width: 80%; margin: auto;">
     <canvas id="doughnutChart"></canvas>
+</div>
+
+<div class="text-center mt-5">
+    <h2>Dish Sales</h2>
+</div>
+<div style="width: 80%; margin: auto;">
+    <canvas id="myChart"></canvas>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

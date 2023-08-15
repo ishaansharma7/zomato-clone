@@ -10,7 +10,8 @@ from django.urls import reverse
 from pprint import pprint
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
-from restaurant_app.utils import add_item_operation, remove_item_operation, create_order_from_session, get_date_range
+from restaurant_app.utils import add_item_operation, remove_item_operation, create_order_from_session, get_date_range, get_date_obj
+from .forms import DateRangeForm
 
 
 class DishListing(LoginRequiredMixin, ListView):
@@ -179,8 +180,20 @@ def order_history(request):
 
 @login_required(login_url='accounts_app:login')
 def analytics(request):
-    # orders = OrderDetail.objects.filter(order_placed=True)
-    orders = OrderDetail.objects.values('dish').annotate(total_quantity=Sum('quantity'))
+    form = DateRangeForm(request.GET)
+    if request.method == "GET" and form.is_valid():
+        print('true')
+        date1 = (form.cleaned_data['date1'])
+        date2 = form.cleaned_data['date2']
+        d1 = get_date_obj(date1)
+        d2 = get_date_obj(date2)
+        orders = OrderDetail.objects.filter(order_time__range=(d1, d2)).values('dish').annotate(total_quantity=Sum('quantity'))
+        total_sales = OrderDetail.objects.filter(order_time__range=(d1, d2)).aggregate(total_amount=Sum('quantity'))
+        restaurants = OrderDetail.objects.filter(order_time__range=(d1, d2)).values('dish__restaurant__name').annotate(total_quantity=Sum('quantity'))
+    else:
+        orders = OrderDetail.objects.values('dish').annotate(total_quantity=Sum('quantity'))
+        total_sales = OrderDetail.objects.aggregate(total_amount=Sum('quantity'))
+        restaurants = OrderDetail.objects.values('dish__restaurant__name').annotate(total_quantity=Sum('quantity'))
     item_list = []
     for order in orders:
         dish = Dish.objects.get(id=str(order['dish']))
@@ -190,15 +203,19 @@ def analytics(request):
         }
         item_list.append(local)
     context = {'items': json.dumps(item_list)}
-    total_sales = OrderDetail.objects.aggregate(total_amount=Sum('quantity'))
+
+
+    
     restaurants_list = []
-    restaurants = OrderDetail.objects.values('dish__restaurant__name').annotate(total_quantity=Sum('quantity'))
     for restau in restaurants:
         local = {
             'name': restau['dish__restaurant__name'],
-            'percentage': restau['total_quantity']/total_sales['total_amount']
+            'percentage': restau['total_quantity']/total_sales['total_amount']*100
         }
         restaurants_list.append(local)
     context['categories'] = json.dumps(restaurants_list)
-
+    if request.method == "GET" and form.is_valid():
+        context['form'] = DateRangeForm(request.GET)
+    else:
+        context['form'] = DateRangeForm()
     return render(request, 'restaurant_app/analytics.html', context)
