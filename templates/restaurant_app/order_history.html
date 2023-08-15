@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% block title %}Order History{% endblock %}
+
+{% block body_block %}
+
+
+
+<div class="row mx-2">
+
+    <div class="col-md-2 my-2"></div>
+
+    <div class="col-md-8 my-2">
+        <div class="container mt-4">
+            <h1>Past Orders</h1>
+            <ul class="list-group mt-4">
+                {% for dish in page_obj %}
+                <li class="list-group-item" id="dish">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <!-- Column 1: Image of the book -->
+                            <img src="{{dish.dish.img_link}}" alt="Dish Image" class="img-fluid"
+                                style="height: auto; width: 200px;">
+                        </div>
+                        <div class="col-md-6">
+                            <h5><strong>{{ dish.dish.name }}</strong></h5>
+                            Quantity: {{ dish.quantity }}<br>
+                            Price: ₹{{ dish.total_price }}<br>
+                            <strong>{{ dish.dish.restaurant.name }}</strong><br>
+                            Order Time: {{ dish.order_time }}
+                        </div>
+                        <div class="col-md-3">
+                        </div>
+                    </div>
+                </li>
+
+                {% endfor %}
+            </ul>
+        </div>
+
+
+    </div>
+
+    <div class="col-md-2 my-2">
+        <form method="get" action="{% url 'restaurant_app:past_orders' %}">
+            <div class="form-group">
+                <label for="exampleFormControlSelect1">Filter on date</label>
+                <select class="form-control" id="exampleFormControlSelect1" name="duration">
+                    <option value="All orders" >All orders</option>
+                    <option value="Past 1 day" {% if selected_duration == 'Past 1 day' %}selected{% endif %}>Past 1 day</option>
+                    <option value="Past 3 days" {% if selected_duration == 'Past 3 days' %}selected{% endif %}>Past 3 days</option>
+                    <option value="Past week" {% if selected_duration == 'Past week' %}selected{% endif %}>Past week</option>
+                    <option value="Past month" {% if selected_duration == 'Past month' %}selected{% endif %}>Past 30 days</option>
+                    <option value="Past year" {% if selected_duration == 'Past year' %}selected{% endif %}>Past year</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Apply</button>
+        </form>
+    </div>
+</div>
+
+<nav aria-label="Page navigation" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item"><a class="page-link" href="?page=1{% if selected_duration %}&duration={{ selected_duration }}{% endif %}">&laquo; First</a></li>
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if selected_duration %}&duration={{ selected_duration }}{% endif %}">Previous</a>
+        </li>
+        {% endif %}
+
+        <li class="page-item active"><a class="page-link" href="#">{{ page_obj.number }}</a></li>
+
+        {% if page_obj.has_next %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if selected_duration %}&duration={{ selected_duration }}{% endif %}">Next</a></li>
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if selected_duration %}&duration={{ selected_duration }}{% endif %}">Last &raquo;</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+
+
+{% endblock %}
