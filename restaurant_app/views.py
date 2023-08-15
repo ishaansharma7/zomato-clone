@@ -1,17 +1,17 @@
-from typing import Any, Dict
-from django.db.models.query import QuerySet
-from django.views.generic import ListView, FormView
+from django.views.generic import ListView
+import json
 from django.shortcuts import render
 from .models import Dish, OrderDetail
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, Sum
 from django.contrib import messages
 from django.shortcuts import redirect
 from django.urls import reverse
 from pprint import pprint
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
-from restaurant_app.utils import add_item_operation, remove_item_operation, create_order_from_session, get_date_range
+from restaurant_app.utils import add_item_operation, remove_item_operation, create_order_from_session, get_date_range, get_date_obj
+from .forms import DateRangeForm
 
 
 class DishListing(LoginRequiredMixin, ListView):
@@ -26,7 +26,8 @@ class DishListing(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         search_term = self.request.GET.get('search_term')
-        if search_term is not None:
+        if search_term is not None and search_term not in ['', 'none']:
+            print('rann----')
             context['search_term'] = search_term
             queryset = self.get_queryset().filter(Q(name__icontains=search_term) | Q(restaurant__name__icontains=search_term))
         else:
@@ -53,18 +54,24 @@ class DishListing(LoginRequiredMixin, ListView):
 
 
 @login_required(login_url='accounts_app:login')
-def add_item(request, page, dish_id, dish_name):
+def add_item(request, page, dish_id, dish_name, search_term='none'):
     add_item_operation(request, dish_id, dish_name)
     # pprint(dict(request.session), indent=2)
-    url = reverse('restaurant_app:dish_listing') + f'?page={page}'
+    if search_term != 'none':
+        url = reverse('restaurant_app:dish_listing') + f'?page={page}&search_term={search_term}'
+    else:
+        url = reverse('restaurant_app:dish_listing') + f'?page={page}'
     return redirect(url)
 
 
 @login_required(login_url='accounts_app:login')
-def remove_item(request, page, dish_id, dish_name):
+def remove_item(request, page, dish_id, dish_name, search_term='none'):
     remove_item_operation(request, dish_id, dish_name)
     # pprint(dict(request.session), indent=2)
-    url = reverse('restaurant_app:dish_listing') + f'?page={page}'
+    if search_term != 'none':
+        url = reverse('restaurant_app:dish_listing') + f'?page={page}&search_term={search_term}'
+    else:
+        url = reverse('restaurant_app:dish_listing') + f'?page={page}'
     return redirect(url)
 
 
@@ -133,7 +140,7 @@ class OrderHistory(LoginRequiredMixin, ListView, ):
     def get_queryset(self):
         return super().get_queryset().order_by('-order_time')
     
-    def get_context_data(self, **kwargs: Any):
+    def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
         if self.request.method == 'POST':
@@ -169,3 +176,46 @@ def order_history(request):
     context['page_obj'] = page_obj
 
     return render(request, 'restaurant_app/order_history.html', context)
+
+
+@login_required(login_url='accounts_app:login')
+def analytics(request):
+    form = DateRangeForm(request.GET)
+    if request.method == "GET" and form.is_valid():
+        print('true')
+        date1 = (form.cleaned_data['date1'])
+        date2 = form.cleaned_data['date2']
+        d1 = get_date_obj(date1)
+        d2 = get_date_obj(date2)
+        orders = OrderDetail.objects.filter(order_time__range=(d1, d2)).values('dish').annotate(total_quantity=Sum('quantity'))
+        total_sales = OrderDetail.objects.filter(order_time__range=(d1, d2)).aggregate(total_amount=Sum('quantity'))
+        restaurants = OrderDetail.objects.filter(order_time__range=(d1, d2)).values('dish__restaurant__name').annotate(total_quantity=Sum('quantity'))
+    else:
+        orders = OrderDetail.objects.values('dish').annotate(total_quantity=Sum('quantity'))
+        total_sales = OrderDetail.objects.aggregate(total_amount=Sum('quantity'))
+        restaurants = OrderDetail.objects.values('dish__restaurant__name').annotate(total_quantity=Sum('quantity'))
+    item_list = []
+    for order in orders:
+        dish = Dish.objects.get(id=str(order['dish']))
+        local = {
+            "name": dish.name + ' | ' + dish.restaurant.name,
+            "quantity": order['total_quantity']
+        }
+        item_list.append(local)
+    context = {'items': json.dumps(item_list)}
+
+
+    
+    restaurants_list = []
+    for restau in restaurants:
+        local = {
+            'name': restau['dish__restaurant__name'],
+            'percentage': restau['total_quantity']/total_sales['total_amount']*100
+        }
+        restaurants_list.append(local)
+    context['categories'] = json.dumps(restaurants_list)
+    if request.method == "GET" and form.is_valid():
+        context['form'] = DateRangeForm(request.GET)
+    else:
+        context['form'] = DateRangeForm()
+    return render(request, 'restaurant_app/analytics.html', context)
