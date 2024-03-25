@@ -1,0 +1,13 @@
+# Exclude development and temporary files
+.vscode
+*.pyc
+*.pyo
+*.pyd
+__pycache__
+
+# Exclude Docker-specific files
+.dockerignore
+Dockerfile
+services.yaml
+RestaurantDetail.json
+Dish.json
